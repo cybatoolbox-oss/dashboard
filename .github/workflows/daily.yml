@@ -1,33 +1,33 @@
 name: Build dashboard
 
-   on:
-     schedule:
-       - cron: "0 22 * * *"
-     workflow_dispatch:
+on:
+  schedule:
+    - cron: "0 22 * * *"
+  workflow_dispatch:
 
-   permissions:
-     contents: write
+permissions:
+  contents: write
 
-   jobs:
-     build:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-         - uses: actions/setup-python@v5
-           with:
-             python-version: "3.12"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-         - run: pip install feedparser requests
+      - run: pip install feedparser requests
 
-         - run: python dashboard.py
-           env:
-             GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - run: python dashboard.py
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-         - name: Save the new dashboard page
-           run: |
-             git config user.name "dashboard-bot"
-             git config user.email "actions@github.com"
-             git add index.html seen_links.json
-             git commit -m "Update dashboard" || echo "Nothing new"
-             git push
+      - name: Save the new dashboard page
+        run: |
+          git config user.name "dashboard-bot"
+          git config user.email "actions@github.com"
+          git add index.html seen_links.json
+          git commit -m "Update dashboard" || echo "Nothing new"
+          git push
