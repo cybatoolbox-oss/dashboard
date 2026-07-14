@@ -1,9 +1,10 @@
 """
-My Personal Business Dashboard — GitHub version
-=================================================
+My Personal Business Dashboard — GitHub version (Gemini)
+==========================================================
 This version runs automatically on GitHub every morning:
-- The API key is read from the repository's protected Secrets vault,
-  never written in this file.
+- Uses Google Gemini's free API tier for the AI filtering.
+- The API key is read from the repository's protected Secrets vault
+  (GEMINI_API_KEY), never written in this file.
 - The output is always written to index.html, which GitHub Pages
   serves as the website's homepage.
 """
@@ -14,12 +15,30 @@ import re
 import json
 import os
 from datetime import date
-from anthropic import Anthropic
 
 # ── YOUR SETTINGS ─────────────────────────────────────────────────────────
 # On GitHub, the API key comes from the repository's protected Secrets vault
-# (Settings -> Secrets and variables -> Actions -> ANTHROPIC_API_KEY).
-API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+# (Settings -> Secrets and variables -> Actions -> GEMINI_API_KEY).
+API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_URL = ("https://generativelanguage.googleapis.com/v1beta/models/"
+              "gemini-2.5-flash-lite:generateContent")
+
+
+def ask_gemini(system, user_text, max_tokens=1500):
+    """Send one request to Google Gemini and return its text reply."""
+    body = {
+        "systemInstruction": {"parts": [{"text": system}]},
+        "contents": [{"parts": [{"text": user_text}]}],
+        "generationConfig": {"maxOutputTokens": max_tokens},
+    }
+    r = requests.post(
+        GEMINI_URL,
+        params={"key": API_KEY},
+        json=body,
+        timeout=60,
+    )
+    r.raise_for_status()
+    return r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
 
 SEEN_FILE = "seen_links.json"
 
@@ -143,7 +162,7 @@ def get_fx_rates():
 
 # ── AI CLASSIFICATION (batched — cheaper and faster) ─────────────────────
 
-def classify_batch(client, category, articles):
+def classify_batch(category, articles):
     if not articles:
         return []
     cards = []
@@ -155,13 +174,7 @@ def classify_batch(client, category, articles):
             for j, a in enumerate(chunk)
         )
         try:
-            response = client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=1500,
-                system=BATCH_SYSTEM_PROMPTS[category],
-                messages=[{"role": "user", "content": numbered}],
-            )
-            raw = response.content[0].text.strip()
+            raw = ask_gemini(BATCH_SYSTEM_PROMPTS[category], numbered)
             raw = re.sub(r"^```json|```$", "", raw, flags=re.MULTILINE).strip()
             results = json.loads(raw)
         except Exception as e:
@@ -180,14 +193,10 @@ def classify_batch(client, category, articles):
     return cards
 
 
-def get_recommendation_cards(client):
+def get_recommendation_cards():
     try:
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=500,
-            messages=[{"role": "user", "content": RECOMMEND_PROMPT}],
-        )
-        raw = re.sub(r"^```json|```$", "", response.content[0].text.strip(), flags=re.MULTILINE)
+        raw = ask_gemini("You are a helpful business advisor.", RECOMMEND_PROMPT, 500)
+        raw = re.sub(r"^```json|```$", "", raw, flags=re.MULTILINE)
         items = json.loads(raw)
         for item in items:
             item["source"] = "Recommended for you"
@@ -296,19 +305,18 @@ def build_html(fx_rates, sections, rec_cards):
 
 
 def main():
-    client = Anthropic(api_key=API_KEY)
     seen = load_seen()
 
     sections = {}
     for category in FEEDS:
         print(f"Checking {category} feeds...")
         new_articles = fetch_new_articles(category, seen)
-        sections[category] = classify_batch(client, category, new_articles)
+        sections[category] = classify_batch(category, new_articles)
         for a in new_articles:
             seen.add(a["link"])
 
     print("Getting this week's picks...")
-    rec_cards = get_recommendation_cards(client)
+    rec_cards = get_recommendation_cards()
 
     fx_rates = get_fx_rates()
 
