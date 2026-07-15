@@ -27,7 +27,7 @@ def china_today():
 # (Settings -> Secrets and variables -> Actions -> GEMINI_API_KEY).
 API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_URL = ("https://generativelanguage.googleapis.com/v1beta/models/"
-              "gemini-2.5-flash-lite:generateContent")
+              "gemini-flash-lite-latest:generateContent")
 
 
 def ask_gemini(system, user_text, max_tokens=1500):
@@ -154,13 +154,11 @@ def fetch_new_articles(category, seen):
 
 def get_fx_rates():
     try:
-        r = requests.get(
-            "https://api.frankfurter.dev/v2/rates",
-            params={"base": "USD", "quotes": "CNY,GHS"},
-            timeout=10,
-        )
+        r = requests.get("https://open.er-api.com/v6/latest/USD", timeout=10)
         r.raise_for_status()
-        return r.json().get("rates", {})
+        all_rates = r.json().get("rates", {})
+        wanted = {k: all_rates[k] for k in ("CNY", "GHS") if k in all_rates}
+        return wanted or None
     except Exception as e:
         print(f"Couldn't fetch exchange rates: {e}")
         return None
