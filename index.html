@@ -1,72 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Daily brief — 2026-07-15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --border:#E4E2DA;
-    --ink:#1F2420; --slate:#6B6F76;
+    --bg:#0F110F; --surface:#171A17; --border:#262A25;
+    --ink:#EDEBE4; --muted:#9A9E96; --accent:#E3B26A;
   }
-  * { box-sizing:border-box; }
-  body { font-family:'Inter',-apple-system,Arial,sans-serif; background:var(--bg);
-         color:var(--ink); margin:0; padding:56px 20px 80px; }
-  .container { max-width:640px; margin:0 auto; }
-  .masthead { text-align:center; margin-bottom:36px; }
-  .eyebrow { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.12em;
-             text-transform:uppercase; color:var(--slate); margin:0 0 10px; }
-  h1 { font-family:'Fraunces',serif; font-weight:600; font-size:34px; margin:0 0 8px; }
-  .dateline { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--slate); margin:0; }
-  .ticker { background:var(--ink); color:#F4F2EC; font-family:'IBM Plex Mono',monospace;
-            font-size:12px; padding:12px 20px; border-radius:6px; text-align:center;
-            margin-bottom:40px; letter-spacing:0.02em; }
-  .ticker-label { text-transform:uppercase; letter-spacing:0.12em; opacity:0.6; margin-right:14px; }
-  .section { margin-bottom:36px; }
-  .section h2 { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.1em;
-                text-transform:uppercase; color:var(--slate); font-weight:500; margin:0 0 8px; }
-  .rule { height:1px; background:var(--border); margin-bottom:16px; }
-  .card { background:var(--surface); border:1px solid var(--border); border-left:3px solid;
-          border-radius:4px; padding:18px 22px; margin-bottom:10px; }
-  .label { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em;
-           text-transform:uppercase; margin:0 0 6px; }
-  .title { font-weight:600; font-size:16px; margin:0 0 6px; color:var(--ink); }
-  .summary { font-size:14px; line-height:1.55; color:#454A44; margin:0 0 10px; }
-  .source { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--slate); margin:0;
-            word-break:break-all; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg);
+         color:var(--ink); padding-bottom:100px; }
+  a { color:var(--accent); text-decoration:none; }
+
+  .hero { position:relative; padding:110px 20px 70px; text-align:center;
+          background:
+            linear-gradient(180deg, rgba(15,17,15,.55) 0%, rgba(15,17,15,.92) 78%, var(--bg) 100%),
+            url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1800&q=55')
+            center 35%/cover no-repeat; }
+  .eyebrow { font-family:'IBM Plex Mono',monospace; font-size:11px;
+             letter-spacing:.22em; text-transform:uppercase; color:var(--accent);
+             margin-bottom:18px; }
+  h1 { font-family:'Fraunces',serif; font-weight:500; font-size:clamp(44px,7vw,84px);
+       line-height:1.02; letter-spacing:-.01em; }
+  .dateline { font-family:'IBM Plex Mono',monospace; font-size:12px;
+              color:var(--muted); margin-top:16px; letter-spacing:.06em; }
+
+  .tabs { display:flex; justify-content:center; gap:8px; margin:44px 0 8px; }
+  .tab { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.14em;
+         text-transform:uppercase; color:var(--muted); background:none;
+         border:1px solid var(--border); border-radius:999px; padding:10px 26px;
+         cursor:pointer; transition:all .25s; }
+  .tab.active { color:var(--bg); background:var(--accent); border-color:var(--accent); }
+  .tab:hover:not(.active) { color:var(--ink); border-color:var(--muted); }
+
+  .container { max-width:760px; margin:0 auto; padding:26px 20px 0; }
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  .ticker { font-family:'IBM Plex Mono',monospace; font-size:12px;
+            border:1px solid var(--border); border-radius:8px; padding:14px 20px;
+            text-align:center; color:var(--ink); letter-spacing:.04em;
+            margin-bottom:14px; background:var(--surface); }
+  .ticker-label { color:var(--accent); text-transform:uppercase;
+                  letter-spacing:.18em; margin-right:16px; font-size:11px; }
+  .dim { color:var(--muted); }
+
+  .block { margin-top:44px; opacity:0; transform:translateY(14px);
+           animation:rise .7s ease forwards; }
+  .block:nth-of-type(2) { animation-delay:.08s; }
+  .block:nth-of-type(3) { animation-delay:.16s; }
+  .block:nth-of-type(4) { animation-delay:.24s; }
+  @keyframes rise { to { opacity:1; transform:none; } }
+
+  .block h2 { font-family:'IBM Plex Mono',monospace; font-size:12px;
+              letter-spacing:.2em; text-transform:uppercase; color:var(--muted);
+              padding-bottom:12px; border-bottom:1px solid var(--border);
+              margin-bottom:18px; font-weight:500; }
+  .grid { display:grid; gap:12px; }
+  .card { background:var(--surface); border:1px solid var(--border);
+          border-radius:10px; padding:22px 24px; transition:border-color .25s; }
+  .card:hover { border-color:var(--accent); }
+  .label { font-family:'IBM Plex Mono',monospace; font-size:10px;
+           letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+           margin-bottom:10px; }
+  .card h3 { font-family:'Fraunces',serif; font-weight:500; font-size:21px;
+             line-height:1.25; margin-bottom:8px; }
+  .summary { font-size:14px; line-height:1.65; color:#C7C9C0; }
+  .source { display:inline-block; margin-top:12px;
+            font-family:'IBM Plex Mono',monospace; font-size:11px;
+            letter-spacing:.06em; }
+  .empty { color:var(--muted); text-align:center; margin-top:60px; }
+
+  .quote-block blockquote { font-family:'Fraunces',serif; font-size:24px;
+    font-weight:400; line-height:1.5; color:var(--ink); padding:8px 4px 0;
+    font-style:italic; }
 </style>
 </head>
 <body>
-  <div class="container">
-    <div class="masthead">
-      <p class="eyebrow">Cross-border business briefing</p>
-      <h1>Your daily brief</h1>
-      <p class="dateline">Wednesday, 15 July 2026</p>
+  <header class="hero">
+    <p class="eyebrow">Cross-border business briefing</p>
+    <h1>Your daily brief</h1>
+    <p class="dateline">Wednesday, 15 July 2026 &middot; Shenzhen edition</p>
+    <div class="tabs">
+      <button class="tab active" onclick="show('tate', this)">Tate</button>
+      <button class="tab" onclick="show('ceecy', this)">Ceecy</button>
     </div>
-    <div class="ticker"><span class="ticker-label">Exchange</span>USD&rarr;CNY 6.78 &nbsp;/&nbsp; USD&rarr;GHS 11.52</div>
-    <div class="section"><h2>This week's picks</h2><div class="rule"></div>
-    <div class="card" style="border-left-color:#5B6B3A">
-      <p class="label" style="color:#5B6B3A">Book</p>
-      <p class="title">Never Split the Difference by Chris Voss</p>
-      <p class="summary">This book provides high-stakes negotiation techniques essential for navigating the distinct communication styles and bargaining cultures often encountered when dealing with Chinese partners.</p>
-      <p class="source">Recommended for you</p>
-    </div>
+  </header>
 
-    <div class="card" style="border-left-color:#A6763A">
-      <p class="label" style="color:#A6763A">Course</p>
-      <p class="title">Cross-Border E-commerce Certification (Alibaba/Global Sources)</p>
-      <p class="summary">These industry-standard certifications provide updated insights into current Chinese export regulations, logistics optimization, and digital payment frameworks critical for cross-border operations.</p>
-      <p class="source">Recommended for you</p>
-    </div>
+  <main class="container">
+    <div id="tate" class="panel active"><div class="ticker"><span class="ticker-label">Exchange</span>USD&rarr;CNY 6.78 <span class="dim">/</span> USD&rarr;GHS 11.52</div><section class="block"><h2>News &amp; visas</h2><div class="grid">
+      <article class="card">
+        <p class="label">Visa</p>
+        <h3>Shenzhen GBA IIT Subsidy Applications Open for Foreign Talent</h3>
+        <p class="summary">This subsidy program significantly reduces the tax burden for high-end foreign talent working in Shenzhen, impacting your personal income planning.</p>
+        <a class="source" href="https://www.china-briefing.com/news/2026-gba-iit-subsidy-kickstarted-in-shenzhen/" target="_blank" rel="noopener">source &rarr;</a>
+      </article></div></section><section class="block"><h2>Jobs</h2><div class="grid">
+      <article class="card">
+        <p class="label">Gig</p>
+        <h3>Administrative Assistant</h3>
+        <p class="summary">This role provides remote administrative coordination and office support, fitting the user's need for flexible bridge income.</p>
+        <a class="source" href="https://remoteOK.com/remote-jobs/remote-entry-level-data-entry-clerk-fully-jobsinmass-com-1134807" target="_blank" rel="noopener">source &rarr;</a>
+      </article>
+      <article class="card">
+        <p class="label">Gig</p>
+        <h3>Data Entry Specialist</h3>
+        <p class="summary">A remote, entry-level position offering flexible scheduling and support, suitable for supplemental income.</p>
+        <a class="source" href="https://remoteOK.com/remote-jobs/remote-data-entry-specialist-jobsinmass-com-1134806" target="_blank" rel="noopener">source &rarr;</a>
+      </article>
+      <article class="card">
+        <p class="label">Gig</p>
+        <h3>English Language Teacher</h3>
+        <p class="summary">An online teaching role that offers flexible freelance scheduling and aligns perfectly with the user's interest in teaching.</p>
+        <a class="source" href="https://remoteOK.com/remote-jobs/remote-english-language-teacher-jobs-karachi-join-gce-academy-gce-academy-1134848" target="_blank" rel="noopener">source &rarr;</a>
+      </article></div></section><section class="block"><h2>This week's picks</h2><div class="grid">
+      <article class="card">
+        <p class="label">Book</p>
+        <h3>Negotiating with Giants</h3>
+        <p class="summary">Provides actionable frameworks for navigating power imbalances when dealing with large Chinese enterprises or international partners, essential for cross-border relationship management.</p>
+        
+      </article>
+      <article class="card">
+        <p class="label">Course</p>
+        <h3>Certified International Trade Professional (CITP)</h3>
+        <p class="summary">This certification covers the complexities of global supply chains and compliance, which is critical for managing the regulatory nuances involved in China-linked cross-border transactions.</p>
+        
+      </article>
+      <article class="card">
+        <p class="label">Skill</p>
+        <h3>Cross-Platform Data Analytics</h3>
+        <p class="summary">Mastering the ability to synthesize data from Western platforms and Chinese ecosystems (like WeChat or Douyin) allows for better decision-making in a fragmented digital market.</p>
+        
+      </article></div></section></div>
+    <div id="ceecy" class="panel"><section class="block quote-block"><h2>Stay grounded</h2><blockquote>&ldquo;Not every season is for harvest. Some are for planting.&rdquo;</blockquote></section></div>
+  </main>
 
-    <div class="card" style="border-left-color:#8C4A2F">
-      <p class="label" style="color:#8C4A2F">Skill</p>
-      <p class="title">Data-Driven Supply Chain Management</p>
-      <p class="summary">Developing proficiency in analyzing real-time supply chain data is crucial for mitigating risks and maintaining transparency when managing international vendors and local consumer expectations.</p>
-      <p class="source">Recommended for you</p>
-    </div></div>
-  </div>
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
 </body>
 </html>
