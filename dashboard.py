@@ -14,7 +14,13 @@ import requests
 import re
 import json
 import os
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+
+def china_today():
+    """Today's date in China time, so the 6am brief carries the right day."""
+    return datetime.now(ZoneInfo("Asia/Shanghai")).date()
 
 # ── YOUR SETTINGS ─────────────────────────────────────────────────────────
 # On GitHub, the API key comes from the repository's protected Secrets vault
@@ -248,13 +254,13 @@ def build_html(fx_rates, sections, rec_cards):
     if not body.strip():
         body = "<p style='color:#888'>Nothing new today — check back tomorrow.</p>"
 
-    weekday_date = date.today().strftime("%A, %d %B %Y")
+    weekday_date = china_today().strftime("%A, %d %B %Y")
 
     return f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Daily brief — {date.today()}</title>
+<title>Daily brief — {china_today()}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
