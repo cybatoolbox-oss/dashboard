@@ -6,245 +6,173 @@
 <title>Daily brief — 2026-07-17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#0F110F; --surface:#171A17; --border:#262A25;
-    --ink:#EDEBE4; --muted:#9A9E96; --accent:#E3B26A;
+    --bg:#030712;
+    --card:rgba(15,23,42,.45);
+    --card-border:rgba(255,255,255,.05);
+    --border:rgba(255,255,255,.06);
+    --ink:#F8FAFC; --body:#B4BAC6; --muted:#64748B;
+    --accent:#f59e0b; --accent-dim:rgba(245,158,11,.05);
+    --accent-glow:rgba(245,158,11,.08);
+  }
+  body.ceecy-mode {
+    --accent:#14b8a6; --accent-dim:rgba(20,184,166,.05);
+    --accent-glow:rgba(20,184,166,.08);
   }
   * { box-sizing:border-box; margin:0; }
-  body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg);
-         color:var(--ink); padding-bottom:100px; }
-  a { color:var(--accent); text-decoration:none; }
+  html { scroll-behavior:smooth; }
+  body {
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); padding-bottom:120px;
+    overflow-x:hidden; -webkit-font-smoothing:antialiased;
+    transition:color .3s;
+  }
+  a { color:var(--accent); text-decoration:none; transition:opacity .2s; }
+  a:hover { opacity:.8; }
+  a:focus-visible,.tab:focus-visible { outline:2px solid var(--accent);
+    outline-offset:3px; border-radius:6px; }
+  .mono { font-family:'JetBrains Mono',monospace; }
 
-  .hero { position:relative; padding:110px 20px 70px; text-align:center;
-          background:
-            linear-gradient(180deg, rgba(15,17,15,.55) 0%, rgba(15,17,15,.92) 78%, var(--bg) 100%),
-            url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1800&q=55')
-            center 35%/cover no-repeat; }
-  .eyebrow { font-family:'IBM Plex Mono',monospace; font-size:11px;
-             letter-spacing:.22em; text-transform:uppercase; color:var(--accent);
-             margin-bottom:18px; }
-  h1 { font-family:'Fraunces',serif; font-weight:500; font-size:clamp(44px,7vw,84px);
-       line-height:1.02; letter-spacing:-.01em; }
-  .dateline { font-family:'IBM Plex Mono',monospace; font-size:12px;
-              color:var(--muted); margin-top:16px; letter-spacing:.06em; }
+  /* ── Header ──────────────────────────────────────────────────── */
+  .hero { position:relative; text-align:center; padding:108px 20px 56px;
+          overflow:hidden; }
+  .hero::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(600px 320px at 50% -8%, var(--accent-glow), transparent 70%),
+               radial-gradient(900px 460px at 50% -18%, rgba(148,163,184,.05), transparent 75%);
+    transition:background .5s; }
+  .hero-inner { position:relative; }
+  .eyebrow { font-family:'JetBrains Mono',monospace; font-size:11px;
+             letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+             margin-bottom:18px; display:inline-flex; align-items:center; gap:9px; }
+  .eyebrow::before { content:""; width:5px; height:5px; border-radius:50%;
+                     background:var(--accent); box-shadow:0 0 10px var(--accent);
+                     transition:background .3s, box-shadow .3s; }
+  h1 { font-weight:600; font-size:clamp(38px,5.4vw,58px); line-height:1.06;
+       letter-spacing:-0.03em; color:var(--ink); }
+  .dateline { font-family:'JetBrains Mono',monospace; font-size:12px;
+              color:var(--muted); margin-top:14px; letter-spacing:.02em; }
+  .dateline .clock { color:var(--accent); transition:color .3s; }
 
-  .tabs { display:flex; justify-content:center; gap:8px; margin:44px 0 8px; }
-  .tab { font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.14em;
-         text-transform:uppercase; color:var(--muted); background:none;
-         border:1px solid var(--border); border-radius:999px; padding:10px 26px;
-         cursor:pointer; transition:all .25s; }
-  .tab.active { color:var(--bg); background:var(--accent); border-color:var(--accent); }
-  .tab:hover:not(.active) { color:var(--ink); border-color:var(--muted); }
+  /* Segmented control */
+  .tabs { display:inline-flex; position:relative; margin-top:36px;
+          background:rgba(255,255,255,.04); border:1px solid var(--border);
+          border-radius:999px; padding:4px; }
+  .tab-indicator { position:absolute; top:4px; bottom:4px; width:calc(50% - 4px);
+    left:4px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08);
+    border-radius:999px; transition:transform .35s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 1px 8px rgba(0,0,0,.35); }
+  body.ceecy-mode .tab-indicator,
+  .tabs.pos-1 .tab-indicator { transform:translateX(100%); }
+  .tab { position:relative; z-index:1; font-family:'Geist',sans-serif;
+         font-size:13.5px; font-weight:500; letter-spacing:-.01em;
+         color:var(--muted); background:none; border:none; border-radius:999px;
+         padding:8px 34px; cursor:pointer; transition:color .3s; }
+  .tab.active { color:var(--ink); }
 
-  .container { max-width:760px; margin:0 auto; padding:26px 20px 0; }
+  /* ── FX ticker ───────────────────────────────────────────────── */
+  .marquee { border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+             background:rgba(255,255,255,.015); overflow:hidden; padding:10px 0;
+             mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+  .marquee-track { display:inline-flex; white-space:nowrap; align-items:center;
+                   animation:scroll 42s linear infinite; }
+  .metric { display:inline-flex; align-items:center; gap:8px; margin:0 26px;
+            font-family:'JetBrains Mono',monospace; font-size:11.5px;
+            letter-spacing:.02em; color:var(--body); }
+  .metric .pair { color:var(--muted); }
+  .metric .val { color:var(--ink); font-weight:500; }
+  .metric .dot { width:4px; height:4px; border-radius:50%; background:var(--accent);
+                 transition:background .3s; }
+  @keyframes scroll { to { transform:translateX(-50%); } }
+
+  /* ── Content ─────────────────────────────────────────────────── */
+  .container { max-width:720px; margin:0 auto; padding:52px 20px 0; }
   .panel { display:none; }
-  .panel.active { display:block; }
+  .panel.active { display:block; animation:panein .4s ease; }
+  @keyframes panein { from { opacity:0; transform:translateY(8px); } }
 
-  .ticker { font-family:'IBM Plex Mono',monospace; font-size:12px;
-            border:1px solid var(--border); border-radius:8px; padding:14px 20px;
-            text-align:center; color:var(--ink); letter-spacing:.04em;
-            margin-bottom:14px; background:var(--surface); }
-  .ticker-label { color:var(--accent); text-transform:uppercase;
-                  letter-spacing:.18em; margin-right:16px; font-size:11px; }
-  .dim { color:var(--muted); }
-
-  .block { margin-top:44px; opacity:0; transform:translateY(14px);
-           animation:rise .7s ease forwards; }
-  .block:nth-of-type(2) { animation-delay:.08s; }
-  .block:nth-of-type(3) { animation-delay:.16s; }
-  .block:nth-of-type(4) { animation-delay:.24s; }
-  @keyframes rise { to { opacity:1; transform:none; } }
-
-  .block h2 { font-family:'IBM Plex Mono',monospace; font-size:12px;
-              letter-spacing:.2em; text-transform:uppercase; color:var(--muted);
-              padding-bottom:12px; border-bottom:1px solid var(--border);
-              margin-bottom:18px; font-weight:500; }
+  .block { margin-top:52px; }
+  .section-head { display:flex; align-items:center; justify-content:space-between;
+                  padding-bottom:12px; border-bottom:1px solid var(--border);
+                  margin-bottom:16px; }
+  .block h2 { font-size:13px; font-weight:600; letter-spacing:-.01em;
+              color:var(--ink); }
+  .count { font-family:'JetBrains Mono',monospace; font-size:11px;
+           color:var(--muted); background:rgba(255,255,255,.04);
+           border:1px solid var(--border); border-radius:6px; padding:2px 8px; }
   .grid { display:grid; gap:12px; }
-  .card { background:var(--surface); border:1px solid var(--border);
-          border-radius:10px; padding:22px 24px; transition:border-color .25s; }
-  .card:hover { border-color:var(--accent); }
-  .label { font-family:'IBM Plex Mono',monospace; font-size:10px;
-           letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
-           margin-bottom:10px; }
-  .card h3 { font-family:'Fraunces',serif; font-weight:500; font-size:21px;
-             line-height:1.25; margin-bottom:8px; }
-  .summary { font-size:14px; line-height:1.65; color:#C7C9C0; }
-  .source { display:inline-block; margin-top:12px;
-            font-family:'IBM Plex Mono',monospace; font-size:11px;
-            letter-spacing:.06em; }
-  .empty { color:var(--muted); text-align:center; margin-top:60px; }
 
-  .quote-block blockquote { font-family:'Fraunces',serif; font-size:24px;
-    font-weight:400; line-height:1.5; color:var(--ink); padding:8px 4px 0;
-    font-style:italic; }
+  .card { position:relative; background:var(--card);
+          border:1px solid var(--card-border); border-radius:12px;
+          padding:22px 24px; overflow:hidden;
+          transition:box-shadow .3s, border-color .3s, transform .3s; }
+  .card::before { content:""; position:absolute; inset:0; opacity:0;
+    transition:opacity .3s;
+    background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),
+      var(--accent-glow), transparent 45%); }
+  .card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.1);
+    box-shadow:0 4px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05); }
+  .card:hover::before { opacity:1; }
+  .card > * { position:relative; }
+  .card.featured { padding:28px; background:var(--accent-dim);
+                   border-color:rgba(255,255,255,.07); }
+  .card.featured h3 { font-size:clamp(21px,3vw,27px); letter-spacing:-.025em; }
+  .label { display:inline-block; font-family:'JetBrains Mono',monospace;
+           font-size:10px; font-weight:500; letter-spacing:.1em;
+           text-transform:uppercase; color:var(--accent);
+           background:var(--accent-dim); border:1px solid var(--card-border);
+           border-radius:5px; padding:3px 8px; margin-bottom:12px;
+           transition:color .3s, background .3s; }
+  .card h3 { font-size:17px; font-weight:600; letter-spacing:-.02em;
+             line-height:1.35; margin-bottom:7px; }
+  .summary { font-size:14px; line-height:1.65; color:var(--body);
+             letter-spacing:-.005em; }
+  .source { display:inline-flex; align-items:center; gap:5px; margin-top:14px;
+            font-family:'JetBrains Mono',monospace; font-size:11px;
+            letter-spacing:.02em; }
+  .empty { color:var(--muted); text-align:center; margin-top:60px; font-size:14px; }
+
+  /* Quote */
+  .quote-block blockquote { border-left:2px solid var(--accent);
+    padding:6px 0 6px 22px; font-size:19px; font-weight:400; line-height:1.6;
+    letter-spacing:-.015em; color:var(--body); transition:border-color .3s; }
+
+  .reveal { opacity:0; transform:translateY(12px);
+            transition:opacity .6s ease, transform .6s ease; }
+  .reveal.in { opacity:1; transform:none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track { animation:none; }
+    .reveal { opacity:1; transform:none; transition:none; }
+    .tab-indicator { transition:none; }
+  }
+  @media (max-width:560px) {
+    .hero { padding:76px 16px 44px; }
+    .card { padding:18px; }
+    .tab { padding:8px 24px; }
+  }
 </style>
 </head>
 <body>
   <header class="hero">
-    <p class="eyebrow">Cross-border business briefing</p>
-    <h1>Your daily brief</h1>
-    <p class="dateline">Friday, 17 July 2026 &middot; Shenzhen edition</p>
-    <div class="tabs">
-      <button class="tab active" onclick="show('tate', this)">Tate</button>
-      <button class="tab" onclick="show('ceecy', this)">Ceecy</button>
+    <div class="hero-inner">
+      <p class="eyebrow">早报 &middot; Cross-border briefing</p>
+      <h1>Your daily brief</h1>
+      <p class="dateline">Friday, 17 July 2026 &middot; Shenzhen edition &middot; <span class="clock" id="szclock"></span></p>
+      <div class="tabs" id="tabs">
+        <div class="tab-indicator"></div>
+        <button class="tab active" onclick="show('tate', this)">Tate</button>
+        <button class="tab" onclick="show('ceecy', this)">Ceecy</button>
+      </div>
     </div>
   </header>
 
+  <div class="marquee"><div class="marquee-track"><span class="metric"><span class="dot"></span><span class="pair">USD/CNY</span><span class="val">6.78</span></span><span class="metric"><span class="dot"></span><span class="pair">USD/GHS</span><span class="val">11.53</span></span><span class="metric"><span class="dot"></span><span class="pair">早安</span><span class="val">Good morning, Shenzhen</span></span><span class="metric"><span class="dot"></span><span class="pair">USD/CNY</span><span class="val">6.78</span></span><span class="metric"><span class="dot"></span><span class="pair">USD/GHS</span><span class="val">11.53</span></span><span class="metric"><span class="dot"></span><span class="pair">早安</span><span class="val">Good morning, Shenzhen</span></span><span class="metric"><span class="dot"></span><span class="pair">USD/CNY</span><span class="val">6.78</span></span><span class="metric"><span class="dot"></span><span class="pair">USD/GHS</span><span class="val">11.53</span></span><span class="metric"><span class="dot"></span><span class="pair">早安</span><span class="val">Good morning, Shenzhen</span></span><span class="metric"><span class="dot"></span><span class="pair">USD/CNY</span><span class="val">6.78</span></span><span class="metric"><span class="dot"></span><span class="pair">USD/GHS</span><span class="val">11.53</span></span><span class="metric"><span class="dot"></span><span class="pair">早安</span><span class="val">Good morning, Shenzhen</span></span></div></div>
+
   <main class="container">
-    <div id="tate" class="panel active"><div class="ticker"><span class="ticker-label">Exchange</span>USD&rarr;CNY 6.78 <span class="dim">/</span> USD&rarr;GHS 11.53</div><section class="block"><h2>News &amp; visas</h2><div class="grid">
-      <article class="card">
-        <p class="label">Market</p>
-        <h3>Ghana's TOR Refinery Restarts Operations</h3>
-        <p class="summary">The restoration of local refining capacity in Ghana may shift future demand for imported refined petroleum products, affecting trade opportunities.</p>
-        <a class="source" href="https://www.myjoyonline.com/tor-receives-one-million-barrels-of-ghanas-jubilee-crude-to-boost-local-refining/" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Market</p>
-        <h3>Digital Payment Expansion for Ghana Transport Sector</h3>
-        <p class="summary">The growth of digital payment infrastructure in Ghana presents opportunities for exporting fintech solutions or hardware from China's tech sector.</p>
-        <a class="source" href="https://www.myjoyonline.com/omcs-commence-fuel-price-increase-star-oil-sells-petrol-at-gh%c2%a213-67-goil-gh%c2%a213-88/" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Market</p>
-        <h3>Ghana Positions as Regional Petroleum Hub</h3>
-        <p class="summary">Ghana's push to become a regional energy hub identifies potential infrastructure and equipment investment prospects for China-Africa trade.</p>
-        <a class="source" href="https://www.myjoyonline.com/omcs-commence-fuel-price-increases-star-oil-sells-petrol-at-gh%c2%a213-67-diesel-at-gh%c2%a216-27/" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Market</p>
-        <h3>Ghana targets 70% local fuel supply through refinery expansion</h3>
-        <p class="summary">Government plans for expanded refining capacity suggest potential shifts in energy import requirements and new opportunities for infrastructure investment in the petroleum sector.</p>
-        <a class="source" href="https://www.myjoyonline.com/govt-targets-70-local-fuel-supply-through-refinery-expansion/" target="_blank" rel="noopener">source &rarr;</a>
-      </article></div></section><section class="block"><h2>Jobs</h2><div class="grid">
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Aethos: Customer Journey and CRM Manager</h3>
-        <p class="summary">This role manages guest communication and CRM strategies, fitting your interest in account management and content creation.</p>
-        <a class="source" href="https://weworkremotely.com/remote-jobs/aethos-customer-journey-and-crm-manager-uk-fixed-term-contract-for-a-maternity-cover" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Wingman Group: CRM Administrator &amp; Technical Support</h3>
-        <p class="summary">This role combines CRM administration and customer support, providing a steady remote opportunity for bridge income.</p>
-        <a class="source" href="https://weworkremotely.com/remote-jobs/wingman-group-pty-crm-administrator-technical-support-night-shift" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Tekion: Implementation Specialist</h3>
-        <p class="summary">This position involves business process mapping and solution implementation, which aligns with your experience in coordination.</p>
-        <a class="source" href="https://weworkremotely.com/remote-jobs/servicetitan-staff-product-manager-residential-crm" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Ashley Digital: Director, CRM</h3>
-        <p class="summary">A leadership role focused on CRM strategy and lifecycle management, suitable for someone with account management expertise.</p>
-        <a class="source" href="https://weworkremotely.com/remote-jobs/tekion-implementation-specialist-variable-ops-experience-required" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>First American: CRM Campaign Manager</h3>
-        <p class="summary">This role involves managing lifecycle marketing and sales enablement, fitting your interest in account management.</p>
-        <a class="source" href="https://weworkremotely.com/remote-jobs/ashley-digital-director-crm" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Patient Scheduler II</h3>
-        <p class="summary">A patient scheduling position that fits your interest in customer service and coordination roles.</p>
-        <a class="source" href="https://weworkremotely.com/remote-jobs/first-american-crm-campaign-manager" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Medical Support Technician Scheduler Outpatient</h3>
-        <p class="summary">A remote scheduling role that matches your interest in coordination and customer service.</p>
-        <a class="source" href="https://remoteOK.com/remote-jobs/remote-patient-scheduler-ii-essentia-health-1134899" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Virtual Executive Assistant</h3>
-        <p class="summary">This remote role involves managing schedules and communication, fitting perfectly with your need for flexible, professional administrative work.</p>
-        <a class="source" href="https://remoteOK.com/remote-jobs/remote-virtual-executive-assistant-zirtual-1134902" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Project Coordinator</h3>
-        <p class="summary">A fully remote role focusing on task management and documentation, offering the flexible project coordination you are looking for.</p>
-        <a class="source" href="https://remoteOK.com/remote-jobs/remote-project-coordinator-verasafe-1134911" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Entry Level Crypto Market Specialist</h3>
-        <p class="summary">A remote, flexible entry-level role in market research and data analytics that requires no prior experience.</p>
-        <a class="source" href="https://remoteOK.com/remote-jobs/remote-entry-level-crypto-market-specialist-apex-trade-1134871" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Associate Director of Athlete Engagement</h3>
-        <p class="summary">This remote, part-time role centers on relationship management and coordination, aligning well with your interest in account management.</p>
-        <a class="source" href="https://remoteOK.com/remote-jobs/remote-associate-director-of-athlete-engagement-axe-sports-group-1134901" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Gig</p>
-        <h3>Australian English Multimedia Voice Artist</h3>
-        <p class="summary">This flexible, remote project-based role utilizes teaching and content creation skills for AI and digital media localization.</p>
-        <a class="source" href="https://remoteOK.com/remote-jobs/remote-australian-english-multimedia-voice-artist-perth-opsarmy-careers-1134936" target="_blank" rel="noopener">source &rarr;</a>
-      </article></div></section><section class="block"><h2>Learning &amp; cybersecurity</h2><div class="grid">
-      <article class="card">
-        <p class="label">Learning</p>
-        <h3>Automating Test Maintenance with AI-Driven Browser Debugging</h3>
-        <p class="summary">Demonstrates the practical application of AI agents in CI/CD pipelines to resolve technical debt and maintain automated security/functional test scripts.</p>
-        <a class="source" href="https://libretto.sh/debug-agents" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Learning</p>
-        <h3>Security Implications of Claude Chrome Extension Vulnerability</h3>
-        <p class="summary">A critical case study in browser extension permission models and the risks of cross-extension communication when integrating AI with sensitive services.</p>
-        <a class="source" href="https://www.bbc.com/future/article/20260715-how-period-trackers-share-womens-private-details" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Learning</p>
-        <h3>Adapting Security Models for Autonomous AI Agents</h3>
-        <p class="summary">Explains how AI agents break traditional perimeter-based security and the shift toward identity-centric, adaptive defense architectures.</p>
-        <a class="source" href="https://www.bleepingcomputer.com/news/security/claude-chrome-extension-flaw-lets-malicious-extensions-trigger-ai-actions/" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Learning</p>
-        <h3>Liability and Data Protection Lessons from 23andMe Breach</h3>
-        <p class="summary">Highlights the massive legal and financial repercussions of failing to protect highly sensitive PII, a key consideration for cybersecurity governance.</p>
-        <a class="source" href="https://www.bleepingcomputer.com/news/security/ai-agents-broke-the-security-playbook-heres-what-replaces-it/" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Learning</p>
-        <h3>Scattered Spider Sentencing: Real-World Cybercrime Consequences</h3>
-        <p class="summary">Provides context on the operational impact of major cybercrime syndicates and the shifting landscape of international legal accountability.</p>
-        <a class="source" href="https://www.bleepingcomputer.com/news/security/23andme-to-pay-18-million-in-new-genetics-data-breach-settlement/" target="_blank" rel="noopener">source &rarr;</a>
-      </article>
-      <article class="card">
-        <p class="label">Learning</p>
-        <h3>CISA Emergency Directive: Managing Oracle E-Business Suite Vulnerabilities</h3>
-        <p class="summary">Essential insight into enterprise-grade vulnerability management and the speed required to address active exploitation of critical business applications.</p>
-        <a class="source" href="https://www.bleepingcomputer.com/news/security/scattered-spider-members-behind-transport-for-london-hack-get-five-years-in-prison/" target="_blank" rel="noopener">source &rarr;</a>
-      </article></div></section><section class="block"><h2>This week's picks</h2><div class="grid">
-      <article class="card">
-        <p class="label">Book</p>
-        <h3>Never Split the Difference by Chris Voss</h3>
-        <p class="summary">This tactical guide provides essential psychological techniques for navigating high-stakes negotiations, which are critical when bridging communication gaps in cross-cultural business environments.</p>
-        
-      </article>
-      <article class="card">
-        <p class="label">Course</p>
-        <h3>China-Ready: Business Strategies for the Chinese Market (Coursera/Peking University)</h3>
-        <p class="summary">This certification offers vital insights into the unique regulatory, cultural, and operational nuances of doing business with and within China, essential for managing cross-border relations.</p>
-        
-      </article>
-      <article class="card">
-        <p class="label">Skill</p>
-        <h3>Data Visualization for Strategic Storytelling</h3>
-        <p class="summary">Mastering the ability to present complex cross-border logistics and market data visually helps build trust and transparency with international stakeholders who may not be familiar with local Chinese market intricacies.</p>
-        
-      </article></div></section></div>
-    <div id="ceecy" class="panel"><section class="block quote-block"><h2>Stay grounded</h2><blockquote>&ldquo;Drink water, stretch, then make the thing.&rdquo;</blockquote></section></div>
+    <div id="tate" class="panel active"><section class="block reveal"><div class="section-head"><h2>This week's picks</h2><span class="count">3</span></div><div class="grid"><article class="card reveal"><span class="label">Book</span><h3>Never Split the Difference by Chris Voss</h3><p class="summary">This masterclass in high-stakes negotiation provides essential psychological tactics for navigating the unique communication nuances and relationship-based business culture prevalent in China.</p></article><article class="card reveal"><span class="label">Course</span><h3>Cross-Border E-Commerce Professional Certification (Alibaba/Coursera)</h3><p class="summary">This program provides a strategic overview of the evolving regulatory environment and logistics landscape governing the movement of goods and services into the Chinese market.</p></article><article class="card reveal"><span class="label">Skill</span><h3>Data-Driven Consumer Insight Analysis</h3><p class="summary">Developing the ability to interpret localized data trends is critical for tailoring products to the specific preferences and consumption habits of the expatriate and Chinese domestic demographic.</p></article></div></section></div>
+    <div id="ceecy" class="panel"><section class="block quote-block reveal"><div class="section-head"><h2>Stay grounded</h2></div><blockquote>Drink water, stretch, then make the thing.</blockquote></section></div>
   </main>
 
 <script>
@@ -253,7 +181,35 @@ function show(id, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  document.body.classList.toggle('ceecy-mode', id === 'ceecy');
+  observeAll();
 }
+function tick() {
+  const t = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Shanghai',
+    hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(new Date());
+  const el = document.getElementById('szclock');
+  if (el) el.textContent = t + ' SZT';
+}
+setInterval(tick, 1000); tick();
+let obs;
+function observeAll() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    return;
+  }
+  obs = obs || new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
+  }), { threshold: .1 });
+  document.querySelectorAll('.reveal:not(.in)').forEach(el => obs.observe(el));
+}
+observeAll();
+document.addEventListener('pointermove', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+  card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+});
 </script>
 </body>
 </html>
