@@ -345,161 +345,289 @@ def esc(s):
     return (s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 
 
-def render_card(card):
+def render_card(card, featured=False):
     src = ""
     if card.get("source"):
-        src = (f'<a class="source" href="{esc(card["source"])}" '
-               f'target="_blank" rel="noopener">source &rarr;</a>')
-    return f"""
-      <article class="card">
-        <p class="label">{esc(card['category'])}</p>
-        <h3>{esc(card['title'])}</h3>
-        <p class="summary">{esc(card['summary'])}</p>
-        {src}
-      </article>"""
+        src = ('<a class="source" href="' + esc(card["source"]) +
+               '" target="_blank" rel="noopener">Source'
+               '<svg width="11" height="11" viewBox="0 0 12 12" fill="none">'
+               '<path d="M3.5 8.5L8.5 3.5M8.5 3.5H4.5M8.5 3.5V7.5" '
+               'stroke="currentColor" stroke-width="1.2" stroke-linecap="round" '
+               'stroke-linejoin="round"/></svg></a>')
+    cls = "card featured" if featured else "card"
+    return ('<article class="' + cls + ' reveal">'
+            '<span class="label">' + esc(card["category"]) + '</span>'
+            '<h3>' + esc(card["title"]) + '</h3>'
+            '<p class="summary">' + esc(card["summary"]) + '</p>'
+            + src + '</article>')
 
 
-def render_section(name, cards):
+def render_section(name, cards, lead=False):
     if not cards:
         return ""
-    return (f'<section class="block"><h2>{esc(name)}</h2>'
-            f'<div class="grid">{"".join(render_card(c) for c in cards)}</div>'
-            f'</section>')
+    count = str(len(cards))
+    inner = ""
+    for i, c in enumerate(cards):
+        inner += render_card(c, featured=(lead and i == 0))
+    return ('<section class="block reveal">'
+            '<div class="section-head"><h2>' + name + '</h2>'
+            '<span class="count">' + count + '</span></div>'
+            '<div class="grid">' + inner + '</div></section>')
+
+
+HTML_TEMPLATE = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily brief — %%DATE%%</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#030712;
+    --card:rgba(15,23,42,.45);
+    --card-border:rgba(255,255,255,.05);
+    --border:rgba(255,255,255,.06);
+    --ink:#F8FAFC; --body:#B4BAC6; --muted:#64748B;
+    --accent:#f59e0b; --accent-dim:rgba(245,158,11,.05);
+    --accent-glow:rgba(245,158,11,.08);
+  }
+  body.ceecy-mode {
+    --accent:#14b8a6; --accent-dim:rgba(20,184,166,.05);
+    --accent-glow:rgba(20,184,166,.08);
+  }
+  * { box-sizing:border-box; margin:0; }
+  html { scroll-behavior:smooth; }
+  body {
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); padding-bottom:120px;
+    overflow-x:hidden; -webkit-font-smoothing:antialiased;
+    transition:color .3s;
+  }
+  a { color:var(--accent); text-decoration:none; transition:opacity .2s; }
+  a:hover { opacity:.8; }
+  a:focus-visible,.tab:focus-visible { outline:2px solid var(--accent);
+    outline-offset:3px; border-radius:6px; }
+  .mono { font-family:'JetBrains Mono',monospace; }
+
+  /* ── Header ──────────────────────────────────────────────────── */
+  .hero { position:relative; text-align:center; padding:108px 20px 56px;
+          overflow:hidden; }
+  .hero::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(600px 320px at 50% -8%, var(--accent-glow), transparent 70%),
+               radial-gradient(900px 460px at 50% -18%, rgba(148,163,184,.05), transparent 75%);
+    transition:background .5s; }
+  .hero-inner { position:relative; }
+  .eyebrow { font-family:'JetBrains Mono',monospace; font-size:11px;
+             letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+             margin-bottom:18px; display:inline-flex; align-items:center; gap:9px; }
+  .eyebrow::before { content:""; width:5px; height:5px; border-radius:50%;
+                     background:var(--accent); box-shadow:0 0 10px var(--accent);
+                     transition:background .3s, box-shadow .3s; }
+  h1 { font-weight:600; font-size:clamp(38px,5.4vw,58px); line-height:1.06;
+       letter-spacing:-0.03em; color:var(--ink); }
+  .dateline { font-family:'JetBrains Mono',monospace; font-size:12px;
+              color:var(--muted); margin-top:14px; letter-spacing:.02em; }
+  .dateline .clock { color:var(--accent); transition:color .3s; }
+
+  /* Segmented control */
+  .tabs { display:inline-flex; position:relative; margin-top:36px;
+          background:rgba(255,255,255,.04); border:1px solid var(--border);
+          border-radius:999px; padding:4px; }
+  .tab-indicator { position:absolute; top:4px; bottom:4px; width:calc(50% - 4px);
+    left:4px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08);
+    border-radius:999px; transition:transform .35s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 1px 8px rgba(0,0,0,.35); }
+  body.ceecy-mode .tab-indicator,
+  .tabs.pos-1 .tab-indicator { transform:translateX(100%); }
+  .tab { position:relative; z-index:1; font-family:'Geist',sans-serif;
+         font-size:13.5px; font-weight:500; letter-spacing:-.01em;
+         color:var(--muted); background:none; border:none; border-radius:999px;
+         padding:8px 34px; cursor:pointer; transition:color .3s; }
+  .tab.active { color:var(--ink); }
+
+  /* ── FX ticker ───────────────────────────────────────────────── */
+  .marquee { border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+             background:rgba(255,255,255,.015); overflow:hidden; padding:10px 0;
+             mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+  .marquee-track { display:inline-flex; white-space:nowrap; align-items:center;
+                   animation:scroll 42s linear infinite; }
+  .metric { display:inline-flex; align-items:center; gap:8px; margin:0 26px;
+            font-family:'JetBrains Mono',monospace; font-size:11.5px;
+            letter-spacing:.02em; color:var(--body); }
+  .metric .pair { color:var(--muted); }
+  .metric .val { color:var(--ink); font-weight:500; }
+  .metric .dot { width:4px; height:4px; border-radius:50%; background:var(--accent);
+                 transition:background .3s; }
+  @keyframes scroll { to { transform:translateX(-50%); } }
+
+  /* ── Content ─────────────────────────────────────────────────── */
+  .container { max-width:720px; margin:0 auto; padding:52px 20px 0; }
+  .panel { display:none; }
+  .panel.active { display:block; animation:panein .4s ease; }
+  @keyframes panein { from { opacity:0; transform:translateY(8px); } }
+
+  .block { margin-top:52px; }
+  .section-head { display:flex; align-items:center; justify-content:space-between;
+                  padding-bottom:12px; border-bottom:1px solid var(--border);
+                  margin-bottom:16px; }
+  .block h2 { font-size:13px; font-weight:600; letter-spacing:-.01em;
+              color:var(--ink); }
+  .count { font-family:'JetBrains Mono',monospace; font-size:11px;
+           color:var(--muted); background:rgba(255,255,255,.04);
+           border:1px solid var(--border); border-radius:6px; padding:2px 8px; }
+  .grid { display:grid; gap:12px; }
+
+  .card { position:relative; background:var(--card);
+          border:1px solid var(--card-border); border-radius:12px;
+          padding:22px 24px; overflow:hidden;
+          transition:box-shadow .3s, border-color .3s, transform .3s; }
+  .card::before { content:""; position:absolute; inset:0; opacity:0;
+    transition:opacity .3s;
+    background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),
+      var(--accent-glow), transparent 45%); }
+  .card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.1);
+    box-shadow:0 4px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05); }
+  .card:hover::before { opacity:1; }
+  .card > * { position:relative; }
+  .card.featured { padding:28px; background:var(--accent-dim);
+                   border-color:rgba(255,255,255,.07); }
+  .card.featured h3 { font-size:clamp(21px,3vw,27px); letter-spacing:-.025em; }
+  .label { display:inline-block; font-family:'JetBrains Mono',monospace;
+           font-size:10px; font-weight:500; letter-spacing:.1em;
+           text-transform:uppercase; color:var(--accent);
+           background:var(--accent-dim); border:1px solid var(--card-border);
+           border-radius:5px; padding:3px 8px; margin-bottom:12px;
+           transition:color .3s, background .3s; }
+  .card h3 { font-size:17px; font-weight:600; letter-spacing:-.02em;
+             line-height:1.35; margin-bottom:7px; }
+  .summary { font-size:14px; line-height:1.65; color:var(--body);
+             letter-spacing:-.005em; }
+  .source { display:inline-flex; align-items:center; gap:5px; margin-top:14px;
+            font-family:'JetBrains Mono',monospace; font-size:11px;
+            letter-spacing:.02em; }
+  .empty { color:var(--muted); text-align:center; margin-top:60px; font-size:14px; }
+
+  /* Quote */
+  .quote-block blockquote { border-left:2px solid var(--accent);
+    padding:6px 0 6px 22px; font-size:19px; font-weight:400; line-height:1.6;
+    letter-spacing:-.015em; color:var(--body); transition:border-color .3s; }
+
+  .reveal { opacity:0; transform:translateY(12px);
+            transition:opacity .6s ease, transform .6s ease; }
+  .reveal.in { opacity:1; transform:none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track { animation:none; }
+    .reveal { opacity:1; transform:none; transition:none; }
+    .tab-indicator { transition:none; }
+  }
+  @media (max-width:560px) {
+    .hero { padding:76px 16px 44px; }
+    .card { padding:18px; }
+    .tab { padding:8px 24px; }
+  }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">早报 &middot; Cross-border briefing</p>
+      <h1>Your daily brief</h1>
+      <p class="dateline">%%WEEKDAY%% &middot; Shenzhen edition &middot; <span class="clock" id="szclock"></span></p>
+      <div class="tabs" id="tabs">
+        <div class="tab-indicator"></div>
+        <button class="tab active" onclick="show('tate', this)">Tate</button>
+        <button class="tab" onclick="show('ceecy', this)">Ceecy</button>
+      </div>
+    </div>
+  </header>
+
+  %%MARQUEE%%
+
+  <main class="container">
+    <div id="tate" class="panel active">%%TATE%%</div>
+    <div id="ceecy" class="panel">%%CEECY%%</div>
+  </main>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  document.body.classList.toggle('ceecy-mode', id === 'ceecy');
+  observeAll();
+}
+function tick() {
+  const t = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Shanghai',
+    hour:'2-digit', minute:'2-digit', second:'2-digit' }).format(new Date());
+  const el = document.getElementById('szclock');
+  if (el) el.textContent = t + ' SZT';
+}
+setInterval(tick, 1000); tick();
+let obs;
+function observeAll() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    return;
+  }
+  obs = obs || new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
+  }), { threshold: .1 });
+  document.querySelectorAll('.reveal:not(.in)').forEach(el => obs.observe(el));
+}
+observeAll();
+document.addEventListener('pointermove', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+  card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+});
+</script>
+</body>
+</html>"""
 
 
 def build_html(fx_rates, tate_sections, ceecy_cards, quote):
     today = china_today()
     weekday_date = today.strftime("%A, %d %B %Y")
 
-    fx_html = ""
+    marquee = ""
     if fx_rates:
-        parts = ' <span class="dim">/</span> '.join(
-            f"USD&rarr;{k} {v:.2f}" for k, v in fx_rates.items())
-        fx_html = (f'<div class="ticker"><span class="ticker-label">Exchange'
-                   f'</span>{parts}</div>')
+        items = "".join(
+            '<span class="metric"><span class="dot"></span>'
+            '<span class="pair">USD/' + k + '</span>'
+            '<span class="val">' + ("%.2f" % v) + '</span></span>'
+            for k, v in fx_rates.items())
+        items += ('<span class="metric"><span class="dot"></span>'
+                  '<span class="pair">早安</span>'
+                  '<span class="val">Good morning, Shenzhen</span></span>')
+        marquee = ('<div class="marquee"><div class="marquee-track">'
+                   + items + items + items + items + '</div></div>')
 
-    tate_html = fx_html
-    for name, cards in tate_sections:
-        tate_html += render_section(name, cards)
-    if tate_html == fx_html and not fx_rates:
-        tate_html = '<p class="empty">Nothing new today — check back tomorrow.</p>'
+    tate_html = ""
+    for i, (name, cards) in enumerate(tate_sections):
+        tate_html += render_section(name, cards, lead=(i == 0))
+    if not tate_html:
+        tate_html = '<p class="empty">Nothing new today. Check back tomorrow.</p>'
 
     ceecy_html = ""
     for name, cards in ceecy_cards:
         ceecy_html += render_section(name, cards)
-    ceecy_html += (f'<section class="block quote-block">'
-                   f'<h2>Stay grounded</h2>'
-                   f'<blockquote>&ldquo;{esc(quote)}&rdquo;</blockquote></section>')
+    ceecy_html += ('<section class="block quote-block reveal">'
+                   '<div class="section-head"><h2>Stay grounded</h2></div>'
+                   '<blockquote>' + esc(quote) + '</blockquote></section>')
 
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily brief — {today}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root {{
-    --bg:#0F110F; --surface:#171A17; --border:#262A25;
-    --ink:#EDEBE4; --muted:#9A9E96; --accent:#E3B26A;
-  }}
-  * {{ box-sizing:border-box; margin:0; }}
-  body {{ font-family:'Inter',-apple-system,sans-serif; background:var(--bg);
-         color:var(--ink); padding-bottom:100px; }}
-  a {{ color:var(--accent); text-decoration:none; }}
-
-  .hero {{ position:relative; padding:110px 20px 70px; text-align:center;
-          background:
-            linear-gradient(180deg, rgba(15,17,15,.55) 0%, rgba(15,17,15,.92) 78%, var(--bg) 100%),
-            url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1800&q=55')
-            center 35%/cover no-repeat; }}
-  .eyebrow {{ font-family:'IBM Plex Mono',monospace; font-size:11px;
-             letter-spacing:.22em; text-transform:uppercase; color:var(--accent);
-             margin-bottom:18px; }}
-  h1 {{ font-family:'Fraunces',serif; font-weight:500; font-size:clamp(44px,7vw,84px);
-       line-height:1.02; letter-spacing:-.01em; }}
-  .dateline {{ font-family:'IBM Plex Mono',monospace; font-size:12px;
-              color:var(--muted); margin-top:16px; letter-spacing:.06em; }}
-
-  .tabs {{ display:flex; justify-content:center; gap:8px; margin:44px 0 8px; }}
-  .tab {{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.14em;
-         text-transform:uppercase; color:var(--muted); background:none;
-         border:1px solid var(--border); border-radius:999px; padding:10px 26px;
-         cursor:pointer; transition:all .25s; }}
-  .tab.active {{ color:var(--bg); background:var(--accent); border-color:var(--accent); }}
-  .tab:hover:not(.active) {{ color:var(--ink); border-color:var(--muted); }}
-
-  .container {{ max-width:760px; margin:0 auto; padding:26px 20px 0; }}
-  .panel {{ display:none; }}
-  .panel.active {{ display:block; }}
-
-  .ticker {{ font-family:'IBM Plex Mono',monospace; font-size:12px;
-            border:1px solid var(--border); border-radius:8px; padding:14px 20px;
-            text-align:center; color:var(--ink); letter-spacing:.04em;
-            margin-bottom:14px; background:var(--surface); }}
-  .ticker-label {{ color:var(--accent); text-transform:uppercase;
-                  letter-spacing:.18em; margin-right:16px; font-size:11px; }}
-  .dim {{ color:var(--muted); }}
-
-  .block {{ margin-top:44px; opacity:0; transform:translateY(14px);
-           animation:rise .7s ease forwards; }}
-  .block:nth-of-type(2) {{ animation-delay:.08s; }}
-  .block:nth-of-type(3) {{ animation-delay:.16s; }}
-  .block:nth-of-type(4) {{ animation-delay:.24s; }}
-  @keyframes rise {{ to {{ opacity:1; transform:none; }} }}
-
-  .block h2 {{ font-family:'IBM Plex Mono',monospace; font-size:12px;
-              letter-spacing:.2em; text-transform:uppercase; color:var(--muted);
-              padding-bottom:12px; border-bottom:1px solid var(--border);
-              margin-bottom:18px; font-weight:500; }}
-  .grid {{ display:grid; gap:12px; }}
-  .card {{ background:var(--surface); border:1px solid var(--border);
-          border-radius:10px; padding:22px 24px; transition:border-color .25s; }}
-  .card:hover {{ border-color:var(--accent); }}
-  .label {{ font-family:'IBM Plex Mono',monospace; font-size:10px;
-           letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
-           margin-bottom:10px; }}
-  .card h3 {{ font-family:'Fraunces',serif; font-weight:500; font-size:21px;
-             line-height:1.25; margin-bottom:8px; }}
-  .summary {{ font-size:14px; line-height:1.65; color:#C7C9C0; }}
-  .source {{ display:inline-block; margin-top:12px;
-            font-family:'IBM Plex Mono',monospace; font-size:11px;
-            letter-spacing:.06em; }}
-  .empty {{ color:var(--muted); text-align:center; margin-top:60px; }}
-
-  .quote-block blockquote {{ font-family:'Fraunces',serif; font-size:24px;
-    font-weight:400; line-height:1.5; color:var(--ink); padding:8px 4px 0;
-    font-style:italic; }}
-</style>
-</head>
-<body>
-  <header class="hero">
-    <p class="eyebrow">Cross-border business briefing</p>
-    <h1>Your daily brief</h1>
-    <p class="dateline">{weekday_date} &middot; Shenzhen edition</p>
-    <div class="tabs">
-      <button class="tab active" onclick="show('tate', this)">Tate</button>
-      <button class="tab" onclick="show('ceecy', this)">Ceecy</button>
-    </div>
-  </header>
-
-  <main class="container">
-    <div id="tate" class="panel active">{tate_html}</div>
-    <div id="ceecy" class="panel">{ceecy_html}</div>
-  </main>
-
-<script>
-function show(id, btn) {{
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  btn.classList.add('active');
-}}
-</script>
-</body>
-</html>"""
+    return (HTML_TEMPLATE
+            .replace("%%DATE%%", str(today))
+            .replace("%%WEEKDAY%%", weekday_date)
+            .replace("%%MARQUEE%%", marquee)
+            .replace("%%TATE%%", tate_html)
+            .replace("%%CEECY%%", ceecy_html))
 
 
 # ── MAIN ──────────────────────────────────────────────────────────────────
