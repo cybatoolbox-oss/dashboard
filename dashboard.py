@@ -22,6 +22,7 @@ import requests
 import re
 import json
 import os
+import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -248,18 +249,48 @@ def parse_json_cards(raw):
 
 
 def discovery_search(name, prompt):
-    """Run one grounded web search and return cards. Never crashes the build."""
+    """Run one grounded web search and return cards. Never crashes the build.
+
+    Google's free tier rate-limits bursts (HTTP 429), so we retry with
+    growing pauses; if search stays unavailable, we fall back to an
+    ungrounded answer so the section still fills for the day."""
+    system = "You are a sharp, honest research assistant. Use web search."
+    for attempt, pause in enumerate((0, 35, 70), start=1):
+        if pause:
+            print(f"{name}: rate-limited, waiting {pause}s (attempt {attempt})...")
+            time.sleep(pause)
+        try:
+            raw = ask_gemini(system, prompt + DISCOVERY_FORMAT,
+                             max_tokens=2000, model=SEARCH_MODEL, grounded=True)
+            cards = parse_json_cards(raw)
+            print(f"{name}: {len(cards)} card(s) (web search)")
+            return cards
+        except requests.HTTPError as e:
+            if e.response is not None and e.response.status_code == 429:
+                continue  # rate limited — wait and retry
+            print(f"{name} search skipped: {e}")
+            break
+        except Exception as e:
+            print(f"{name} search skipped: {e}")
+            break
+
+    # Fallback: no live search, but still give useful general guidance.
     try:
         raw = ask_gemini(
-            "You are a sharp, honest research assistant. Use web search." ,
+            "You are a sharp, honest research assistant. You do NOT have "
+            "web access right now; answer from general knowledge, avoid "
+            "specific dates/deadlines you cannot verify, and say 'verify "
+            "current details' where relevant.",
             prompt + DISCOVERY_FORMAT,
-            max_tokens=2000, model=SEARCH_MODEL, grounded=True,
-        )
+            max_tokens=1500, model=CLASSIFY_MODEL, grounded=False)
         cards = parse_json_cards(raw)
-        print(f"{name}: {len(cards)} card(s)")
+        for c in cards:
+            c["category"] = (c.get("category") or "Note") + " · unverified"
+            c["source"] = ""
+        print(f"{name}: {len(cards)} card(s) (fallback, no live search)")
         return cards
     except Exception as e:
-        print(f"{name} search skipped: {e}")
+        print(f"{name} fallback skipped: {e}")
         return []
 
 
@@ -650,8 +681,10 @@ def main():
 
     # 2. Discovery engine (grounded web search)
     shenzhen_cards = discovery_search("Shenzhen today", SHENZHEN_DAILY_PROMPT)
+    time.sleep(20)  # breathe between searches: free tier dislikes bursts
     hunt_name, hunt_prompt = WEEKLY_HUNTS[today.weekday()]
     hunt_cards = discovery_search(f"Hunt: {hunt_name}", hunt_prompt)
+    time.sleep(20)
     ceecy_raw_cards = discovery_search("Ceecy brief", CEECY_PROMPT)
 
     # 3. Assemble
